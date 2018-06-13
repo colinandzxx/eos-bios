@@ -20,6 +20,7 @@ type SnapshotLine struct {
 
 func NewSnapshot(content []byte) (out Snapshot, err error) {
 	reader := csv.NewReader(bytes.NewBuffer(content))
+	reader.LazyQuotes = true
 	allRecords, err := reader.ReadAll()
 	if err != nil {
 		return
@@ -56,6 +57,7 @@ type UnregdSnapshotLine struct {
 
 func NewUnregdSnapshot(content []byte) (out UnregdSnapshot, err error) {
 	reader := csv.NewReader(bytes.NewBuffer(content))
+	reader.LazyQuotes = true
 	allRecords, err := reader.ReadAll()
 	if err != nil {
 		return
