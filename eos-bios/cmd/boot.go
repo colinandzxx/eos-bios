@@ -34,7 +34,7 @@ The "publish_kickstart_data" will also be run, giving you the opportunity to dis
 Boot is what happens when you run "eos-bios orchestrate" and you are selected to be the BIOS Boot node.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		net, err := fetchNetwork(viper.GetBool("single"), true)
+		net, err := fetchNetwork(viper.GetBool("single"), viper.GetBool("download-refs"))
 		if err != nil {
 			log.Fatalln("fetch network:", err)
 		}
@@ -77,6 +77,7 @@ func init() {
 	RootCmd.AddCommand(bootCmd)
 
 	bootCmd.Flags().BoolP("single", "s", false, "Don't try to discover the world, just boot a local instance.")
+	bootCmd.Flags().BoolP("download-refs", "d", false, "Download refs from network(need \"--single\").")
 	bootCmd.Flags().BoolP("reuse-genesis", "", false, "Re-load genesis data from genesis.json, genesis.pub and genesis.key instead of creating a new one.")
 	bootCmd.Flags().BoolP("reset", "", false, "Remove the published genesis data from the seed_network, so that others don't accidentally join a defunc or restarted network.")
 	bootCmd.Flags().StringP("override-bootseq", "", "", "Override the boot_sequence.yaml file with a local file path (don't used the published one)")
