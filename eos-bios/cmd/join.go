@@ -26,26 +26,54 @@ var joinCmd = &cobra.Command{
 	Short: "Triggers the hooks to join an already running network",
 	Long:  `This will run the "join_network" hook with data discovered from the network pointed to by the seed_discovery_url.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		net, err := fetchNetwork(false, true)
-		if err != nil {
-			log.Fatalln("fetch network:", err)
-		}
+		if !viper.GetBool("mainnet") {
+			net, err := fetchNetwork(false, true)
+			if err != nil {
+				log.Fatalln("fetch network:", err)
+			}
 
-		if elect := viper.GetString("elect"); elect != "" {
-			net.CalculateNetworkWeights(elect)
-		}
+			if elect := viper.GetString("elect"); elect != "" {
+				net.CalculateNetworkWeights(elect)
+			}
 
-		b, err := setupBIOS(net)
-		if err != nil {
-			log.Fatalln("bios setup:", err)
-		}
+			b, err := setupBIOS(net)
+			if err != nil {
+				log.Fatalln("bios setup:", err)
+			}
 
-		if err := b.Init(); err != nil {
-			log.Fatalf("BIOS initialization error: %s", err)
-		}
+			if err := b.Init(); err != nil {
+				log.Fatalf("BIOS initialization error: %s", err)
+			}
 
-		if err := b.StartJoin(viper.GetBool("validate")); err != nil {
-			log.Fatalf("error joining network: %s", err)
+			if err := b.StartJoin(viper.GetBool("validate")); err != nil {
+				log.Fatalf("error joining network: %s", err)
+			}
+		} else {
+			net, err := fetchNetwork(true, true)
+			if err != nil {
+				log.Fatalln("fetch network:", err)
+			}
+
+			if elect := viper.GetString("elect"); elect != "" {
+				net.CalculateNetworkWeights(elect)
+			}
+
+			b, err := setupBIOS(net)
+			if err != nil {
+				log.Fatalln("bios setup:", err)
+			}
+
+			b.SingleOnly = true
+			//b.OverrideBootSequenceFile = true
+			b.ReuseGenesis = true
+			if err := b.Init(); err != nil {
+				log.Fatalf("BIOS initialization error: %s", err)
+			}
+
+			if err := b.StartJoin(viper.GetBool("validate")); err != nil {
+				log.Fatalf("error joining network: %s", err)
+			}
+
 		}
 	},
 }
@@ -53,9 +81,12 @@ var joinCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(joinCmd)
 
+	joinCmd.Flags().BoolP("mainnet", "", false, "Join the mainnet directly.")
 	joinCmd.Flags().BoolP("validate", "", false, "Validate the boot sequence by comparing all expected actions against what is on the first blocks of the chain")
 
-	if err := viper.BindPFlag("validate", joinCmd.Flags().Lookup("validate")); err != nil {
-		panic(err)
+	for _, flag := range []string{"mainnet", "validate"} {
+		if err := viper.BindPFlag(flag, joinCmd.Flags().Lookup(flag)); err != nil {
+			panic(err)
+		}
 	}
 }

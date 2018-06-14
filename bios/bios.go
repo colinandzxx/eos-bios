@@ -894,7 +894,6 @@ func (b *BIOS) LoadGenesisFromFile(pubkey string) (string, error) {
 }
 
 func (b *BIOS) GetContentsCacheRef(filename string) (string, error) {
-	return filename, nil
 	for _, fl := range b.LaunchDisco.TargetContents {
 		if fl.Name == filename {
 			return fl.Ref, nil
